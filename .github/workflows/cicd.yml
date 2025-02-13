@@ -35,7 +35,7 @@ jobs:
 
     - name: Lint Docker Compose File with Docker Compose Lint
       run: |
-        pip install docker-compose
+        pip install --no-cache-dir docker-compose
         docker-compose -f docker-compose.yml config
 
     - name: Build Docker Image
