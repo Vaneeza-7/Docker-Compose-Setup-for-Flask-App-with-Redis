@@ -35,8 +35,10 @@ jobs:
 
     - name: Lint Docker Compose File with Docker Compose Lint
       run: |
+        pip install --upgrade cython
         sudo apt-get update
-        sudo apt-get install -y libffi-dev libssl-dev python3-dev build-essential
+        sudo apt-get install -y libffi-dev libssl-dev python3-dev build-essential python3-setuptools python3-wheel
+        pip install --no-cache-dir PyYAML>=6.0
         pip install --no-cache-dir docker-compose
         docker-compose -f docker-compose.yml config
 
