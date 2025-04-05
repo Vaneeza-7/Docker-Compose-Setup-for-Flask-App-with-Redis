@@ -1,0 +1,60 @@
+name: CI/CD of Flask App with Redis through Docker Compose
+
+on:
+  push:
+    branches: [compose-setup]
+  pull_request:
+    branches: [compose-setup, main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+
+    - name: Setup Python 3.10.16
+      uses: actions/setup-python@v4
+      with:
+        python-version: 3.10.16
+
+    - name: Install dependencies
+      run: |
+        make install
+
+    - name: Lint Code
+      run: |
+        pip install pylint
+        make lint
+
+    - name: Lint Dockerfile with Hadolint
+      uses: hadolint/hadolint-action@v3.1.0
+      with:
+        dockerfile: Dockerfile
+
+    - name: Lint Docker Compose File with Hadolint
+      uses: hadolint/hadolint-action@v3.1.0
+      with:
+        docker-compose-file: docker-compose.yml
+
+    - name: Build Docker Image
+      run: |
+        docker build -t flask-app-compose-task .
+
+    - name: Authenticate with Docker Hub
+      run: |
+        echo "${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}" | docker login -u "${{ secrets.DOCKER_HUB_USERNAME }}" --password-stdin
+
+    - name: Install Docker Scout
+      run: |
+        curl -fsSL https://raw.githubusercontent.com/docker/scout-cli/main/install.sh | sh
+            
+    - name: Run Security Scan with Docker Scout
+      run: |
+        docker scout quickview flask-app-compose-task
+
+    - name: Push Docker Image to Docker Hub
+      run: |
+        docker tag flask-app-compose-task ${{ secrets.DOCKER_HUB_USERNAME }}/flask-app-compose-task
+        docker push ${{ secrets.DOCKER_HUB_USERNAME }}/flask-app-compose-task
